@@ -78,11 +78,21 @@ func (api *API) Init() {
 
 // Inject this API
 func (api *API) Inject(name string, beans map[string]bean.BeanInterface) error {
-	if aRouterBean, ok := beans["router"].(RouterInterface); ok {
-		api.RouterBean = aRouterBean
-		log.Printf("%s Inject Ok", api.GetName())
-	} else {
-		log.Printf("%s Inject Ko", api.GetName())
+	// first get reflect metata data
+	valuePtr := reflect.TypeOf(api)
+	value := valuePtr.Elem()
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		var beanName = field.Tag.Get("bean")
+		// apply only when bean tag is set
+		if len(beanName) > 0 {
+			if aRouterBean, ok := beans[beanName].(RouterInterface); ok {
+				api.RouterBean = aRouterBean
+				log.Printf("%s Inject Ok for %s", api.GetName(), beanName)
+			} else {
+				log.Fatalf("%s Inject Ko for %s", api.GetName(), beanName)
+			}
+		}
 	}
 	return nil
 }

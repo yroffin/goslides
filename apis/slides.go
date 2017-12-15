@@ -38,8 +38,8 @@ type Slide struct {
 	Name string
 }
 
-// InterfaceSlide Test all package methods
-type InterfaceSlide interface {
+// SlideInterface Test all package methods
+type SlideInterface interface {
 	APIInterface
 	HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request)
 }
