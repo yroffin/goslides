@@ -26,38 +26,47 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+
+	"github.com/yroffin/goslides/bean"
 )
 
 // Slide internal members
 type Slide struct {
 	// Base component
-	*StructAPI
+	*API
 	// internal members
 	Name string
 }
 
 // InterfaceSlide Test all package methods
 type InterfaceSlide interface {
-	PostConstruct() error
+	APIInterface
 	HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request)
 }
 
-// Init this API
-func (api Slide) Init() {
+// Inject this API
+func (api *Slide) Inject(name string, beans map[string]bean.BeanInterface) error {
+	api.API.Inject(name, beans)
+	return nil
+}
+
+// PostConstruct this API
+func (api *Slide) PostConstruct(name string) error {
 	// define all methods
 	api.methods = []APIMethod{{path: "/api/slides", handler: "HandlerStatic", method: "GET", addr: reflect.ValueOf(api).MethodByName("HandlerStatic")}, {path: "/api/slides", handler: "HandlerStaticPOST", method: "POST", addr: reflect.ValueOf(api).MethodByName("HandlerStaticPOST")}}
 	// Call base class
-	api.StructAPI.Init()
+	api.API.Init()
+	return nil
 }
 
-// Init this API
-func (api Slide) PostConstruct() error {
-	return api.StructAPI.PostConstruct()
+// Validate this API
+func (api *Slide) Validate(name string) error {
+	return nil
 }
 
-// HandlerStatic is our handler function. It has to follow the function signature of a ResponseWriter and Request type
+// HandlerStaticPOST is our handler function. It has to follow the function signature of a ResponseWriter and Request type
 // as the arguments.
-func (api Slide) HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request) {
+func (api *Slide) HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(202)

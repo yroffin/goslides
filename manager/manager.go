@@ -20,21 +20,53 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-package interfaces
+package manager
 
-import "log"
+import (
+	"log"
 
-// Bean interface
-type Bean struct {
+	"github.com/yroffin/goslides/bean"
+)
+
+// Manager interface
+type Manager struct {
+	Beans map[string]bean.BeanInterface
 }
 
-// BeanInterface interface
-type BeanInterface interface {
-	PostConstruct() error
+// ManagerInterface interface
+type ManagerInterface interface {
+	Init() error
+	Register() error
+	Boot() error
 }
 
-// PostConstruct Init this bean
-func (bean Bean) PostConstruct() error {
-	log.Printf("Bean::PostConstruct")
+// Init a single bean
+func (m *Manager) Init() {
+	log.Printf("Manager::Init")
+	m.Beans = map[string]bean.BeanInterface{}
+}
+
+// Register a single bean
+func (m *Manager) Register(name string, bean bean.BeanInterface) error {
+	m.Beans[name] = bean
+	bean.SetName(name)
+	log.Printf("Manager::Register %s", bean.GetName())
+	return nil
+}
+
+// Boot Init this manager
+func (m *Manager) Boot() error {
+	log.Printf("Manager::Boot inject")
+	for key, value := range m.Beans {
+		value.Inject(key, m.Beans)
+	}
+	log.Printf("Manager::Boot post-construct")
+	for key, value := range m.Beans {
+		value.PostConstruct(key)
+	}
+	log.Printf("Manager::Boot validate")
+	for key, value := range m.Beans {
+		value.Validate(key)
+	}
 	return nil
 }

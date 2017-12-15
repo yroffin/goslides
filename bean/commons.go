@@ -20,42 +20,44 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-package interfaces
+package bean
 
 import (
 	"log"
 )
 
-// Manager interface
-type Manager struct {
-	Beans map[string]BeanInterface
+// Bean interface
+type Bean struct {
+	Name string
 }
 
-// ManagerInterface interface
-type ManagerInterface interface {
-	Init() error
-	Register() error
-	Boot() error
+// BeanInterface interface
+type BeanInterface interface {
+	GetName() string
+	SetName(name string)
+	Inject(string, map[string]BeanInterface) error
+	PostConstruct(string) error
+	Validate(string) error
 }
 
-// Init a single bean
-func (m *Manager) Init() {
-	log.Printf("Manager::Init")
-	m.Beans = map[string]BeanInterface{}
+// SetName fix the bean name
+func (bean *Bean) SetName(name string) {
+	bean.Name = name
 }
 
-// Register a single bean
-func (m *Manager) Register(name string, bean BeanInterface) error {
-	log.Printf("Manager::Register %s %s", name, bean)
-	m.Beans[name] = bean
+// GetName get the bean name
+func (bean *Bean) GetName() string {
+	return bean.Name
+}
+
+// Inject Init this bean
+func (bean *Bean) Inject(string, map[string]BeanInterface) error {
+	log.Printf("Bean::Inject")
 	return nil
 }
 
-// Boot Init this manager
-func (m *Manager) Boot() error {
-	log.Printf("Manager::Boot")
-	for key, value := range m.Beans {
-		log.Printf("Manager::Boot %s => %s", key, value)
-	}
+// PostConstruct Init this bean
+func (bean *Bean) PostConstruct(string) error {
+	log.Printf("Bean::PostConstruct")
 	return nil
 }

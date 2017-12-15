@@ -30,17 +30,19 @@ import (
 	"reflect"
 
 	"github.com/gorilla/mux"
-	"github.com/yroffin/goslides/interfaces"
+	"github.com/yroffin/goslides/bean"
 )
 
-// StructAPI base class
-type StructAPI struct {
+// API base class
+type API struct {
 	// members
-	interfaces.Bean
+	bean.Bean
 	// mux router
 	Router *mux.Router
 	// all mthods to declare
 	methods []APIMethod
+	// Router
+	RouterBean RouterInterface `bean:"router"`
 }
 
 // APIMethod single structure to modelise api declaration
@@ -51,57 +53,69 @@ type APIMethod struct {
 	addr    reflect.Value
 }
 
-// InterfaceAPI all package methods
-type InterfaceAPI interface {
+// APIInterface all package methods
+type APIInterface interface {
+	bean.BeanInterface
 	Declare(APIMethod, interface{})
 	GetMethods() []APIMethod
 	HandlerStatic() func(w http.ResponseWriter, r *http.Request)
-	PostConstruct() error
 }
 
 // Init initialize the API
-func (api StructAPI) Init() {
+func (api *API) Init() {
 	// build arguments
 	arr := [1]reflect.Value{reflect.ValueOf(api)}
 	var arguments = arr[1:1]
 	// build all static acess to low level function (private)
 	var config = api.GetMethods()
 	for i := 0; i < len(config); i++ {
+		// compute rvalue
 		var rvalue = config[i].addr.Call(arguments)[0]
-		log.Printf("Declare interface 0x%08x", rvalue)
-
 		// declare this new method
 		api.Declare(config[i], rvalue.Interface())
 	}
 }
 
-// Init this API
-func (api StructAPI) PostConstruct() error {
-	return api.Bean.PostConstruct()
+// Inject this API
+func (api *API) Inject(name string, beans map[string]bean.BeanInterface) error {
+	if aRouterBean, ok := beans["router"].(RouterInterface); ok {
+		api.RouterBean = aRouterBean
+		log.Printf("%s Inject Ok", api.GetName())
+	} else {
+		log.Printf("%s Inject Ko", api.GetName())
+	}
+	return nil
+}
+
+// PostConstruct this API
+func (api *API) PostConstruct(name string) error {
+	return api.Bean.PostConstruct(name)
 }
 
 // GetMethods retrieve all method to declare in router
-func (api StructAPI) GetMethods() []APIMethod {
+func (api *API) GetMethods() []APIMethod {
 	return api.methods
 }
 
 // Declare a new interface
-func (api StructAPI) Declare(data APIMethod, intf interface{}) error {
+func (api *API) Declare(data APIMethod, intf interface{}) error {
+	var result error
 	// verify type
 	if value, ok := intf.(func(http.ResponseWriter, *http.Request)); ok {
-		log.Printf("Declare interface %s on %s with method %s", data.handler, data.path, data.method)
+		log.Printf("Declare interface %s on %s with method %s (%s)", data.handler, data.path, data.method, api.RouterBean.GetName())
 		// declare it to the router
-		api.Router.HandleFunc(data.path, value).Methods(data.method).Headers("Content-Type", "application/json")
-		return nil
+		api.RouterBean.HandleFunc(data.path, value, data.method, "application/json")
+		result = nil
 	} else {
 		// Error case
-		return errors.New("Unable to find any type for " + data.handler)
+		result = errors.New("Unable to find any type for " + data.handler)
 	}
+	return result
 }
 
 // HandlerStatic is our handler function. It has to follow the function signature of a ResponseWriter and Request type
 // as the arguments.
-func (api StructAPI) HandlerStatic() func(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandlerStatic() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(201)

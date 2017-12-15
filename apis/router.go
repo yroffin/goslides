@@ -22,20 +22,47 @@
 // SOFTWARE.
 package apis
 
-import "github.com/yroffin/goslides/interfaces"
+import (
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/yroffin/goslides/bean"
+)
 
 // Router internal members
 type Router struct {
 	// Base component
-	*interfaces.Bean
+	*bean.Bean
+	// mux router
+	Router *mux.Router
 }
 
 // RouterInterface Test all package methods
 type RouterInterface interface {
-	interfaces.BeanInterface
+	bean.BeanInterface
+	HandleFunc(path string, f func(http.ResponseWriter, *http.Request), method string, content string)
 }
 
 // PostConstruct Init this API
-func (api Router) PostConstruct() error {
-	return api.Bean.PostConstruct()
+func (api *Router) PostConstruct(name string) error {
+	log.Printf("Router::PostConstruct - router creation")
+	// define all routes
+	api.Router = mux.NewRouter()
+	return nil
+}
+
+// Validate Init this API
+func (api *Router) Validate(name string) error {
+	log.Printf("Router::Validate - router validation")
+	// handle now all requests
+	http.Handle("/", api.Router)
+	return nil
+}
+
+// HandleFunc declare a handler
+func (api *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request), method string, content string) {
+	log.Printf("Router::HandleFunc %s with method %s", path, method)
+	// declare it to the router
+	api.Router.HandleFunc(path, f).Methods(method).Headers("Content-Type", content)
 }
