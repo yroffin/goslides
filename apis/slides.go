@@ -26,8 +26,6 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-
-	"github.com/yroffin/goslides/bean"
 )
 
 // Slide internal members
@@ -39,15 +37,9 @@ type Slide struct {
 }
 
 // SlideInterface Test all package methods
-type SlideInterface interface {
+type ISlide interface {
 	APIInterface
 	HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request)
-}
-
-// Inject this API
-func (api *Slide) Inject(name string, beans map[string]bean.BeanInterface) error {
-	api.API.Inject(name, beans)
-	return nil
 }
 
 // PostConstruct this API

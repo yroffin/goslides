@@ -32,10 +32,10 @@ type Bean struct {
 }
 
 // BeanInterface interface
-type BeanInterface interface {
+type IBean interface {
+	Init()
 	GetName() string
 	SetName(name string)
-	Inject(string, map[string]BeanInterface) error
 	PostConstruct(string) error
 	Validate(string) error
 }
@@ -51,7 +51,7 @@ func (bean *Bean) GetName() string {
 }
 
 // Inject Init this bean
-func (bean *Bean) Inject(string, map[string]BeanInterface) error {
+func (bean *Bean) Inject(string, map[string]IBean) error {
 	log.Printf("Bean::Inject")
 	return nil
 }

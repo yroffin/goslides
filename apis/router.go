@@ -39,9 +39,13 @@ type Router struct {
 }
 
 // RouterInterface Test all package methods
-type RouterInterface interface {
-	bean.BeanInterface
+type IRouter interface {
+	bean.IBean
 	HandleFunc(path string, f func(http.ResponseWriter, *http.Request), method string, content string)
+}
+
+// Init Init this API
+func (api *Router) Init() {
 }
 
 // PostConstruct Init this API

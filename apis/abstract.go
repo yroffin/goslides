@@ -1,4 +1,4 @@
-// Package interfaces for common interfaces
+// Package apis for common interfaces
 // MIT License
 //
 // Copyright (c) 2017 yroffin
@@ -36,13 +36,14 @@ import (
 // API base class
 type API struct {
 	// members
-	bean.Bean
+	*bean.Bean
 	// mux router
 	Router *mux.Router
 	// all mthods to declare
 	methods []APIMethod
-	// Router
-	RouterBean RouterInterface `bean:"router"`
+	// Router with injection mecanism
+	SetRouterBean func(interface{}) `bean:"router"`
+	RouterBean    *Router
 }
 
 // APIMethod single structure to modelise api declaration
@@ -55,7 +56,7 @@ type APIMethod struct {
 
 // APIInterface all package methods
 type APIInterface interface {
-	bean.BeanInterface
+	bean.IBean
 	Declare(APIMethod, interface{})
 	GetMethods() []APIMethod
 	HandlerStatic() func(w http.ResponseWriter, r *http.Request)
@@ -63,6 +64,13 @@ type APIInterface interface {
 
 // Init initialize the API
 func (api *API) Init() {
+	api.SetRouterBean = func(value interface{}) {
+		if assertion, ok := value.(*Router); ok {
+			api.RouterBean = assertion
+		} else {
+			log.Fatalf("Unable to validate injection with %v type is %v", value, reflect.TypeOf(value))
+		}
+	}
 	// build arguments
 	arr := [1]reflect.Value{reflect.ValueOf(api)}
 	var arguments = arr[1:1]
@@ -74,27 +82,6 @@ func (api *API) Init() {
 		// declare this new method
 		api.Declare(config[i], rvalue.Interface())
 	}
-}
-
-// Inject this API
-func (api *API) Inject(name string, beans map[string]bean.BeanInterface) error {
-	// first get reflect metata data
-	valuePtr := reflect.TypeOf(api)
-	value := valuePtr.Elem()
-	for i := 0; i < value.NumField(); i++ {
-		field := value.Field(i)
-		var beanName = field.Tag.Get("bean")
-		// apply only when bean tag is set
-		if len(beanName) > 0 {
-			if aRouterBean, ok := beans[beanName].(RouterInterface); ok {
-				api.RouterBean = aRouterBean
-				log.Printf("%s Inject Ok for %s", api.GetName(), beanName)
-			} else {
-				log.Fatalf("%s Inject Ko for %s", api.GetName(), beanName)
-			}
-		}
-	}
-	return nil
 }
 
 // PostConstruct this API
@@ -112,9 +99,9 @@ func (api *API) Declare(data APIMethod, intf interface{}) error {
 	var result error
 	// verify type
 	if value, ok := intf.(func(http.ResponseWriter, *http.Request)); ok {
-		log.Printf("Declare interface %s on %s with method %s (%s)", data.handler, data.path, data.method, api.RouterBean.GetName())
+		log.Printf("Declare interface %s on %s with method %s (%s)", data.handler, data.path, data.method, (*api.RouterBean).GetName())
 		// declare it to the router
-		api.RouterBean.HandleFunc(data.path, value, data.method, "application/json")
+		(*api.RouterBean).HandleFunc(data.path, value, data.method, "application/json")
 		result = nil
 	} else {
 		// Error case

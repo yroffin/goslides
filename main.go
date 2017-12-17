@@ -41,7 +41,7 @@ func main() {
 	var m = manager.Manager{}
 	m.Init()
 	m.Register("router", &apis.Router{Bean: &bean.Bean{}})
-	m.Register("slide", &apis.Slide{API: &apis.API{}})
+	m.Register("slide", &apis.Slide{API: &apis.API{Bean: &bean.Bean{}}})
 	m.Boot()
 
 	// After defining our server, we finally "listen and serve" on port 8080
