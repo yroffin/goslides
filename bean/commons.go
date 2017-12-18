@@ -33,7 +33,7 @@ type Bean struct {
 
 // BeanInterface interface
 type IBean interface {
-	Init()
+	Init() error
 	GetName() string
 	SetName(name string)
 	PostConstruct(string) error

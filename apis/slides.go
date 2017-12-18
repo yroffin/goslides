@@ -23,9 +23,13 @@
 package apis
 
 import (
-	"fmt"
-	"net/http"
+	"encoding/json"
+	"log"
 	"reflect"
+
+	"github.com/yroffin/goslides/bean"
+	"github.com/yroffin/goslides/business"
+	"github.com/yroffin/goslides/models"
 )
 
 // Slide internal members
@@ -34,20 +38,51 @@ type Slide struct {
 	*API
 	// internal members
 	Name string
+	// mounts
+	crud string `path:"/api/slides"`
+	// Router with injection mecanism
+	SetSlideBusiness func(interface{}) `bean:"slide-business"`
+	SlideBusiness    *business.SlideBusiness
 }
 
-// SlideInterface Test all package methods
+// ISlide implements IBean
 type ISlide interface {
-	APIInterface
-	HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request)
+	bean.IBean
+}
+
+// PostConstruct this API
+func (p *Slide) Init() error {
+	// inject SlideBusiness
+	p.SetSlideBusiness = func(value interface{}) {
+		if assertion, ok := value.(*business.SlideBusiness); ok {
+			p.SlideBusiness = assertion
+		} else {
+			log.Fatalf("Unable to validate injection with %v type is %v", value, reflect.TypeOf(value))
+		}
+	}
+	// Crud
+	p.HandlerGetByID = func(id string) (string, error) {
+		return p.GetByID(id)
+	}
+	p.HandlerPost = func(body string) (string, error) {
+		return p.Post(body)
+	}
+	p.HandlerPutByID = func(id string, body string) (string, error) {
+		return p.PutByID(id, body)
+	}
+	p.HandlerDeleteByID = func(id string) (string, error) {
+		return p.DeleteByID(id)
+	}
+	p.HandlerPatchByID = func(id string, body string) (string, error) {
+		return p.PatchByID(id, body)
+	}
+	return p.API.Init()
 }
 
 // PostConstruct this API
 func (api *Slide) PostConstruct(name string) error {
-	// define all methods
-	api.methods = []APIMethod{{path: "/api/slides", handler: "HandlerStatic", method: "GET", addr: reflect.ValueOf(api).MethodByName("HandlerStatic")}, {path: "/api/slides", handler: "HandlerStaticPOST", method: "POST", addr: reflect.ValueOf(api).MethodByName("HandlerStaticPOST")}}
-	// Call base class
-	api.API.Init()
+	// Scan struct and init all handler
+	api.ScanHandler(api)
 	return nil
 }
 
@@ -56,13 +91,46 @@ func (api *Slide) Validate(name string) error {
 	return nil
 }
 
-// HandlerStaticPOST is our handler function. It has to follow the function signature of a ResponseWriter and Request type
-// as the arguments.
-func (api *Slide) HandlerStaticPOST() func(w http.ResponseWriter, r *http.Request) {
-	anonymous := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-		w.WriteHeader(202)
-		fmt.Fprintf(w, "{}")
-	}
-	return anonymous
+// GetByID default method
+func (p *Slide) GetByID(id string) (string, error) {
+	bean, _ := p.SlideBusiness.Get(id)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// Post adefault method
+func (p *Slide) Post(body string) (string, error) {
+	var toCreate models.SlideBean
+	var bin = []byte(body)
+	json.Unmarshal(bin, &toCreate)
+	bean, _ := p.SlideBusiness.Create(toCreate)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// PutByID default method
+func (p *Slide) PutByID(id string, body string) (string, error) {
+	var toUpdate models.SlideBean
+	var bin = []byte(body)
+	json.Unmarshal(bin, &toUpdate)
+	bean, _ := p.SlideBusiness.Update(id, toUpdate)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// PatchByID default method
+func (p *Slide) PatchByID(id string, body string) (string, error) {
+	var toPatch models.SlideBean
+	var bin = []byte(body)
+	json.Unmarshal(bin, &toPatch)
+	bean, _ := p.SlideBusiness.Patch(id, toPatch)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// DeleteByID default method
+func (p *Slide) DeleteByID(id string) (string, error) {
+	old, _ := p.SlideBusiness.Delete(id)
+	data, _ := json.Marshal(&old)
+	return string(data), nil
 }

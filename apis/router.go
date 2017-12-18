@@ -38,14 +38,14 @@ type Router struct {
 	Router *mux.Router
 }
 
-// RouterInterface Test all package methods
+// IRouter Test all package methods
 type IRouter interface {
 	bean.IBean
-	HandleFunc(path string, f func(http.ResponseWriter, *http.Request), method string, content string)
 }
 
 // Init Init this API
-func (api *Router) Init() {
+func (api *Router) Init() error {
+	return nil
 }
 
 // PostConstruct Init this API

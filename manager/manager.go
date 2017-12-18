@@ -29,6 +29,7 @@ import (
 
 	"github.com/yroffin/goslides/apis"
 	"github.com/yroffin/goslides/bean"
+	"github.com/yroffin/goslides/business"
 )
 
 // Manager interface
@@ -61,9 +62,13 @@ func (m *Manager) Register(name string, element interface{}) error {
 	case *apis.Slide:
 		(*v).SetName(name)
 		(*v).Init()
+	case *business.SlideBusiness:
+		(*v).SetName(name)
+		(*v).Init()
 	default:
 		log.Fatalf("Manager::Register unable to register %s", name)
 	}
+	log.Printf("Manager::Register successful register %s with %v", name, reflect.TypeOf(element))
 	return nil
 }
 
@@ -77,8 +82,9 @@ func (m *Manager) Boot() error {
 	for key, value := range m.Beans {
 		if assertion, ok := value.(bean.IBean); ok {
 			assertion.PostConstruct(key)
+			log.Printf("Manager::Boot post-construct sucessfull with %v for '%v'", reflect.TypeOf(value), key)
 		} else {
-			log.Fatalf("Manager::Boot unable to post-construct")
+			log.Fatalf("Manager::Boot unable to post-construct with %v for '%v'", reflect.TypeOf(value), key)
 		}
 	}
 	log.Printf("Manager::Boot validate")

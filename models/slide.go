@@ -1,3 +1,4 @@
+// Package models for all models
 // MIT License
 //
 // Copyright (c) 2017 yroffin
@@ -19,33 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-package main
+package models
 
-import (
-	// fmt has methods for formatted IO
-
-	// the "net/http" library has methods for HTTP
-
-	"net/http"
-	// Gorilla router
-
-	// Apis
-	"github.com/yroffin/goslides/apis"
-	"github.com/yroffin/goslides/bean"
-	"github.com/yroffin/goslides/business"
-	"github.com/yroffin/goslides/manager"
-)
-
-// Rest()
-func main() {
-	// declare manager and boot it
-	var m = manager.Manager{}
-	m.Init()
-	m.Register("router", &apis.Router{Bean: &bean.Bean{}})
-	m.Register("slide", &apis.Slide{API: &apis.API{Bean: &bean.Bean{}}})
-	m.Register("slide-business", &business.SlideBusiness{Bean: &bean.Bean{}})
-	m.Boot()
-
-	// After defining our server, we finally "listen and serve" on port 8080
-	http.ListenAndServe(":8080", nil)
+// SlideBean simple slide model
+type SlideBean struct {
+	// Id
+	ID string
+	// Name
+	Name string
 }
