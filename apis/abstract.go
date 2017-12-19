@@ -23,8 +23,10 @@
 package apis
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -32,6 +34,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/yroffin/goslides/bean"
+	"github.com/yroffin/goslides/business"
+	"github.com/yroffin/goslides/models"
 )
 
 // API base class
@@ -45,6 +49,9 @@ type API struct {
 	// Router with injection mecanism
 	SetRouterBean func(interface{}) `bean:"router"`
 	RouterBean    *Router
+	// Router with injection mecanism
+	SetCrudBusiness func(interface{}) `bean:"crud-business"`
+	CrudBusiness    *business.CrudBusiness
 	// Crud
 	HandlerGetByID    func(id string) (string, error)
 	HandlerPost       func(body string) (string, error)
@@ -80,11 +87,11 @@ func (p *API) ScanHandler(ptr interface{}) {
 			p.append(ptr, field.Tag.Get("path"), field.Tag.Get("handler"), field.Tag.Get("method"))
 		}
 		if strings.Contains(field.Name, "crud") {
-			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9]*[a-z]*[A-Z]*}", "HandlerStaticGetByID", "GET")
+			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticGetByID", "GET")
 			p.append(ptr, field.Tag.Get("path"), "HandlerStaticPost", "POST")
-			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9]*[a-z]*[A-Z]*}", "HandlerStaticPutByID", "PUT")
-			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9]*[a-z]*[A-Z]*}", "HandlerStaticDeleteByID", "DELETE")
-			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9]*[a-z]*[A-Z]*}", "HandlerStaticPatchByID", "PATCH")
+			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticPutByID", "PUT")
+			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticDeleteByID", "DELETE")
+			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticPatchByID", "PATCH")
 		}
 	}
 	// call bean init
@@ -102,8 +109,16 @@ func (p *API) append(ptr interface{}, path string, handler string, method string
 	p.methods = append(p.methods, APIMethod{path: path, handler: handler, method: method, addr: addr})
 }
 
-// Init initialize the API
+// Init initialize the APIf
 func (p *API) Init() error {
+	// inject SlideBusiness
+	p.SetCrudBusiness = func(value interface{}) {
+		if assertion, ok := value.(*business.CrudBusiness); ok {
+			p.CrudBusiness = assertion
+		} else {
+			log.Fatalf("Unable to validate injection with %v type is %v", value, reflect.TypeOf(value))
+		}
+	}
 	// inject RouterBean
 	p.SetRouterBean = func(value interface{}) {
 		if assertion, ok := value.(*Router); ok {
@@ -156,7 +171,7 @@ func (p *API) Declare(data APIMethod, intf interface{}) error {
 func (p *API) HandlerStaticGetByID() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		data, err := p.HandlerGetByID("id")
+		data, err := p.HandlerGetByID(mux.Vars(r)["id"])
 		if err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{\"message\":\"\"}")
@@ -172,7 +187,8 @@ func (p *API) HandlerStaticGetByID() func(w http.ResponseWriter, r *http.Request
 func (p *API) HandlerStaticPost() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		data, err := p.HandlerPost("id")
+		body, _ := ioutil.ReadAll(r.Body)
+		data, err := p.HandlerPost(string(body))
 		if err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{\"message\":\"\"}")
@@ -188,7 +204,8 @@ func (p *API) HandlerStaticPost() func(w http.ResponseWriter, r *http.Request) {
 func (p *API) HandlerStaticPutByID() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		data, err := p.HandlerPutByID("id", "body")
+		body, _ := ioutil.ReadAll(r.Body)
+		data, err := p.HandlerPutByID(mux.Vars(r)["id"], string(body))
 		if err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{\"message\":\"\"}")
@@ -204,7 +221,7 @@ func (p *API) HandlerStaticPutByID() func(w http.ResponseWriter, r *http.Request
 func (p *API) HandlerStaticDeleteByID() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		data, err := p.HandlerDeleteByID("id")
+		data, err := p.HandlerDeleteByID(mux.Vars(r)["id"])
 		if err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{\"message\":\"\"}")
@@ -220,7 +237,8 @@ func (p *API) HandlerStaticDeleteByID() func(w http.ResponseWriter, r *http.Requ
 func (p *API) HandlerStaticPatchByID() func(w http.ResponseWriter, r *http.Request) {
 	anonymous := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		data, err := p.HandlerPatchByID("id", "body")
+		body, _ := ioutil.ReadAll(r.Body)
+		data, err := p.HandlerPatchByID(mux.Vars(r)["id"], string(body))
 		if err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{\"message\":\"\"}")
@@ -230,4 +248,49 @@ func (p *API) HandlerStaticPatchByID() func(w http.ResponseWriter, r *http.Reque
 		fmt.Fprintf(w, data)
 	}
 	return anonymous
+}
+
+// genericGetByID default method
+func (p *API) genericGetByID(id string, toGet models.IPersistent) (string, error) {
+	toGet.SetID(id)
+	p.CrudBusiness.Get(toGet)
+	data, _ := json.Marshal(&toGet)
+	return string(data), nil
+}
+
+// genericPost adefault method
+func (p *API) genericPost(body string, toCreate models.IPersistent) (string, error) {
+	var bin = []byte(body)
+	json.Unmarshal(bin, &toCreate)
+	bean, _ := p.CrudBusiness.Create(toCreate)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// genericPutByID default method
+func (p *API) genericPutByID(id string, body string, toUpdate models.IPersistent) (string, error) {
+	toUpdate.SetID(id)
+	var bin = []byte(body)
+	json.Unmarshal(bin, &toUpdate)
+	bean, _ := p.CrudBusiness.Update(toUpdate)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// genericPatchByID default method
+func (p *API) genericPatchByID(id string, body string, toPatch models.IPersistent) (string, error) {
+	toPatch.SetID(id)
+	var bin = []byte(body)
+	json.Unmarshal(bin, &toPatch)
+	bean, _ := p.CrudBusiness.Patch(toPatch)
+	data, _ := json.Marshal(&bean)
+	return string(data), nil
+}
+
+// genericDeleteByID default method
+func (p *API) genericDeleteByID(id string, toDelete models.IPersistent) (string, error) {
+	toDelete.SetID(id)
+	old, _ := p.CrudBusiness.Delete(toDelete)
+	data, _ := json.Marshal(&old)
+	return string(data), nil
 }

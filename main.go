@@ -34,6 +34,7 @@ import (
 	"github.com/yroffin/goslides/bean"
 	"github.com/yroffin/goslides/business"
 	"github.com/yroffin/goslides/manager"
+	"github.com/yroffin/goslides/stores"
 )
 
 // Rest()
@@ -41,9 +42,12 @@ func main() {
 	// declare manager and boot it
 	var m = manager.Manager{}
 	m.Init()
+	// Core beans
 	m.Register("router", &apis.Router{Bean: &bean.Bean{}})
+	m.Register("crud-business", &business.CrudBusiness{Bean: &bean.Bean{}})
+	m.Register("store-manager", &stores.Store{Bean: &bean.Bean{}})
+	// API beans
 	m.Register("slide", &apis.Slide{API: &apis.API{Bean: &bean.Bean{}}})
-	m.Register("slide-business", &business.SlideBusiness{Bean: &bean.Bean{}})
 	m.Boot()
 
 	// After defining our server, we finally "listen and serve" on port 8080

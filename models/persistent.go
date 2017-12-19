@@ -22,20 +22,8 @@
 // SOFTWARE.
 package models
 
-// SlideBean simple slide model
-type SlideBean struct {
-	// Id
-	ID string
-	// Name
-	Name string
-}
-
-// GetID retrieve ID
-func (p *SlideBean) GetID() string {
-	return p.ID
-}
-
-// SetID retrieve ID
-func (p *SlideBean) SetID(ID string) {
-	p.ID = ID
+// IPersistent interface
+type IPersistent interface {
+	GetID() string
+	SetID(string)
 }

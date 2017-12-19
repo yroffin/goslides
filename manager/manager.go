@@ -30,6 +30,7 @@ import (
 	"github.com/yroffin/goslides/apis"
 	"github.com/yroffin/goslides/bean"
 	"github.com/yroffin/goslides/business"
+	"github.com/yroffin/goslides/stores"
 )
 
 // Manager interface
@@ -62,11 +63,14 @@ func (m *Manager) Register(name string, element interface{}) error {
 	case *apis.Slide:
 		(*v).SetName(name)
 		(*v).Init()
-	case *business.SlideBusiness:
+	case *business.CrudBusiness:
+		(*v).SetName(name)
+		(*v).Init()
+	case *stores.Store:
 		(*v).SetName(name)
 		(*v).Init()
 	default:
-		log.Fatalf("Manager::Register unable to register %s", name)
+		log.Fatalf("Manager::Register unable to register %s with '%v'", name, reflect.TypeOf(element))
 	}
 	log.Printf("Manager::Register successful register %s with %v", name, reflect.TypeOf(element))
 	return nil
