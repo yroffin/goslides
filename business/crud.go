@@ -35,7 +35,7 @@ import (
 type CrudBusiness struct {
 	// Base component
 	*bean.Bean
-	// Router with injection mecanism
+	// Store with injection mecanism
 	SetStore func(interface{}) `bean:"store-manager"`
 	Store    *stores.Store
 }
@@ -50,7 +50,7 @@ type ICrudBusiness interface {
 	Patch(models.IPersistent) (interface{}, error)
 }
 
-// Init Init this API
+// Init this bean
 func (p *CrudBusiness) Init() error {
 	// inject store
 	p.SetStore = func(value interface{}) {
@@ -63,41 +63,41 @@ func (p *CrudBusiness) Init() error {
 	return nil
 }
 
-// PostConstruct Init this API
+// PostConstruct this bean
 func (p *CrudBusiness) PostConstruct(name string) error {
 	return nil
 }
 
-// Validate Init this API
+// Validate this bean
 func (p *CrudBusiness) Validate(name string) error {
 	return nil
 }
 
-// Get retrieve this slide by its id
+// Get retrieve this bean by its id
 func (p *CrudBusiness) Get(toGet models.IPersistent) error {
 	p.Store.Get(toGet.GetID(), &toGet)
 	return nil
 }
 
-// Create create a new slide
+// Create create a new persistent bean
 func (p *CrudBusiness) Create(toCreate models.IPersistent) (interface{}, error) {
 	p.Store.Create(&toCreate, func(id string) { toCreate.SetID(id) })
 	return toCreate, nil
 }
 
-// Update a new slide
+// Update an existing bean
 func (p *CrudBusiness) Update(toUpdate models.IPersistent) (interface{}, error) {
 	p.Store.Update(toUpdate.GetID(), &toUpdate, func(id string) { toUpdate.SetID(id) })
 	return toUpdate, nil
 }
 
-// Delete a slide
+// Delete a bean
 func (p *CrudBusiness) Delete(toDelete models.IPersistent) (interface{}, error) {
 	p.Store.Delete(toDelete.GetID(), &toDelete, func(id string) { toDelete.SetID(id) })
 	return toDelete, nil
 }
 
-// Patch a slide
+// Patch a bean
 func (p *CrudBusiness) Patch(toPatch models.IPersistent) (interface{}, error) {
 	p.Store.Update(toPatch.GetID(), &toPatch, func(id string) { toPatch.SetID(id) })
 	return toPatch, nil

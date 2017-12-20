@@ -27,15 +27,12 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/yroffin/goslides/apis"
 	"github.com/yroffin/goslides/bean"
-	"github.com/yroffin/goslides/business"
-	"github.com/yroffin/goslides/stores"
 )
 
 // Manager interface
 type Manager struct {
-	Beans map[string]interface{}
+	Beans map[string]bean.IBean
 }
 
 // IManager interface
@@ -50,29 +47,14 @@ type IManager interface {
 // Init a single bean
 func (m *Manager) Init() {
 	log.Printf("Manager::Init")
-	m.Beans = make(map[string]interface{})
+	m.Beans = make(map[string]bean.IBean)
 }
 
 // Register a single bean
-func (m *Manager) Register(name string, element interface{}) error {
-	m.Beans[name] = element
-	switch v := element.(type) {
-	case *apis.Router:
-		(*v).SetName(name)
-		(*v).Init()
-	case *apis.Slide:
-		(*v).SetName(name)
-		(*v).Init()
-	case *business.CrudBusiness:
-		(*v).SetName(name)
-		(*v).Init()
-	case *stores.Store:
-		(*v).SetName(name)
-		(*v).Init()
-	default:
-		log.Fatalf("Manager::Register unable to register %s with '%v'", name, reflect.TypeOf(element))
-	}
-	log.Printf("Manager::Register successful register %s with %v", name, reflect.TypeOf(element))
+func (m *Manager) Register(name string, b bean.IBean) error {
+	m.Beans[name] = b
+	b.SetName(name)
+	b.Init()
 	return nil
 }
 
@@ -81,23 +63,17 @@ func (m *Manager) Boot() error {
 	log.Printf("Manager::Boot inject")
 	for key, value := range m.Beans {
 		m.Inject(key, value)
+		log.Printf("Manager::Boot injection sucessfull for %v", key)
 	}
 	log.Printf("Manager::Boot post-construct")
 	for key, value := range m.Beans {
-		if assertion, ok := value.(bean.IBean); ok {
-			assertion.PostConstruct(key)
-			log.Printf("Manager::Boot post-construct sucessfull with %v for '%v'", reflect.TypeOf(value), key)
-		} else {
-			log.Fatalf("Manager::Boot unable to post-construct with %v for '%v'", reflect.TypeOf(value), key)
-		}
+		value.PostConstruct(key)
+		log.Printf("Manager::Boot post-construct sucessfull for %v", key)
 	}
 	log.Printf("Manager::Boot validate")
 	for key, value := range m.Beans {
-		if assertion, ok := value.(bean.IBean); ok {
-			assertion.Validate(key)
-		} else {
-			log.Fatalf("Manager::Boot unable to validate")
-		}
+		value.Validate(key)
+		log.Printf("Manager::Boot validation sucessfull for %v", key)
 	}
 	return nil
 }

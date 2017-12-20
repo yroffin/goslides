@@ -72,7 +72,6 @@ type APIMethod struct {
 type APIInterface interface {
 	bean.IBean
 	Declare(APIMethod, interface{})
-	GetMethods() []APIMethod
 	HandlerStatic() func(w http.ResponseWriter, r *http.Request)
 	HandlerGetByID(id string) (string, error)
 }
@@ -131,12 +130,11 @@ func (p *API) Init() error {
 	arr := [1]reflect.Value{reflect.ValueOf(p)}
 	var arguments = arr[1:1]
 	// build all static acess to low level function (private)
-	var config = p.GetMethods()
-	for i := 0; i < len(config); i++ {
+	for i := 0; i < len(p.methods); i++ {
 		// compute rvalue
-		var rvalue = config[i].addr.Call(arguments)[0]
+		var rvalue = p.methods[i].addr.Call(arguments)[0]
 		// declare this new method
-		p.Declare(config[i], rvalue.Interface())
+		p.Declare(p.methods[i], rvalue.Interface())
 	}
 	return nil
 }
@@ -144,11 +142,6 @@ func (p *API) Init() error {
 // PostConstruct this API
 func (p *API) PostConstruct(name string) error {
 	return p.Bean.PostConstruct(name)
-}
-
-// GetMethods retrieve all method to declare in router
-func (p *API) GetMethods() []APIMethod {
-	return p.methods
 }
 
 // Declare a new interface
