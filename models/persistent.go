@@ -25,6 +25,7 @@ package models
 // IPersistent interface
 type IPersistent interface {
 	GetID() string
+	SetName() string
 	SetID(string)
 	Copy() IPersistent
 }

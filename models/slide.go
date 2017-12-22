@@ -30,6 +30,11 @@ type SlideBean struct {
 	Name string
 }
 
+// SetName get set name
+func (p *SlideBean) SetName() string {
+	return "Slide"
+}
+
 // GetID retrieve ID
 func (p *SlideBean) GetID() string {
 	return p.ID

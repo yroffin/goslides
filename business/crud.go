@@ -81,30 +81,30 @@ func (p *CrudBusiness) GetAll(toGet models.IPersistent, toGets models.IPersisten
 
 // Get retrieve this bean by its id
 func (p *CrudBusiness) Get(toGet models.IPersistent) error {
-	p.Store.Get(toGet.GetID(), &toGet)
+	p.Store.Get(toGet.GetID(), toGet)
 	return nil
 }
 
 // Create create a new persistent bean
 func (p *CrudBusiness) Create(toCreate models.IPersistent) (interface{}, error) {
-	p.Store.Create(&toCreate, func(id string) { toCreate.SetID(id) })
+	p.Store.Create(toCreate, func(id string) { toCreate.SetID(id) })
 	return toCreate, nil
 }
 
 // Update an existing bean
 func (p *CrudBusiness) Update(toUpdate models.IPersistent) (interface{}, error) {
-	p.Store.Update(toUpdate.GetID(), &toUpdate, func(id string) { toUpdate.SetID(id) })
+	p.Store.Update(toUpdate.GetID(), toUpdate, func(id string) { toUpdate.SetID(id) })
 	return toUpdate, nil
 }
 
 // Delete a bean
 func (p *CrudBusiness) Delete(toDelete models.IPersistent) (interface{}, error) {
-	p.Store.Delete(toDelete.GetID(), &toDelete, func(id string) { toDelete.SetID(id) })
+	p.Store.Delete(toDelete.GetID(), toDelete, func(id string) { toDelete.SetID(id) })
 	return toDelete, nil
 }
 
 // Patch a bean
 func (p *CrudBusiness) Patch(toPatch models.IPersistent) (interface{}, error) {
-	p.Store.Update(toPatch.GetID(), &toPatch, func(id string) { toPatch.SetID(id) })
+	p.Store.Update(toPatch.GetID(), toPatch, func(id string) { toPatch.SetID(id) })
 	return toPatch, nil
 }

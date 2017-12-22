@@ -28,7 +28,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"reflect"
+	"log"
 
 	"github.com/yroffin/goslides/models"
 
@@ -63,7 +63,7 @@ func (p *Store) PostConstruct(name string) error {
 	p.database = database
 
 	var tables []string
-	tables = append(tables, "SlideBean")
+	tables = append(tables, "Slide")
 	for i := 0; i < len(tables); i++ {
 		// prepare statement
 		statement, _ := p.database.Prepare("CREATE TABLE IF NOT EXISTS " + tables[i] + " (id TEXT NOT NULL PRIMARY KEY, json TEXT)")
@@ -95,55 +95,57 @@ func (p *Store) uuid(entity interface{}, set func(id string)) (string, error) {
 }
 
 // Create this persistent bean n store
-func (p *Store) Create(entity interface{}, set func(id string)) error {
+func (p *Store) Create(entity models.IPersistent, set func(id string)) error {
 	// get entity name
-	var entityName = reflect.TypeOf(entity).Elem().Name()
+	var entityName = entity.SetName()
 	// fix UUID
 	uuid, _ := p.uuid(entity, set)
 	// insert
 	statement, _ := p.database.Prepare("INSERT INTO " + entityName + " (id, json) VALUES (?,?)")
-	data, _ := json.Marshal(&entity)
+	data, _ := json.Marshal(entity)
 	statement.Exec(uuid, string(data))
 	return nil
 }
 
 // Update this persistent bean
-func (p *Store) Update(id string, entity interface{}, set func(id string)) error {
+func (p *Store) Update(id string, entity models.IPersistent, set func(id string)) error {
 	// get entity name
-	var entityName = reflect.TypeOf(entity).Elem().Name()
+	var entityName = entity.SetName()
 	// Fix ID
 	set(id)
 	// prepare statement
 	statement, _ := p.database.Prepare("UPDATE " + entityName + " SET json = ? WHERE id = ?")
-	data, _ := json.Marshal(&entity)
-	statement.Exec(id, string(data))
+	data, _ := json.Marshal(entity)
+	res, _ := statement.Exec(string(data), id)
+	rowAffected, _ := res.RowsAffected()
+	log.Printf("UPDATE %s with %v affected row(s)", entityName, rowAffected)
 	return nil
 }
 
 // Update this persistent bean
-func (p *Store) Delete(id string, entity interface{}, set func(id string)) error {
+func (p *Store) Delete(id string, entity models.IPersistent, set func(id string)) error {
 	// get entity name
-	var entityName = reflect.TypeOf(entity).Elem().Name()
+	var entityName = entity.SetName()
 	// Fix ID
 	set(id)
 	// prepare statement
 	statement, _ := p.database.Prepare("DELETE " + entityName + " SET json = ? WHERE id = ?")
-	data, _ := json.Marshal(&entity)
-	statement.Exec(id, string(data))
+	data, _ := json.Marshal(entity)
+	statement.Exec(string(data), id)
 	return nil
 }
 
 // Get this persistent bean
-func (p *Store) Get(id string, entity interface{}) error {
+func (p *Store) Get(id string, entity models.IPersistent) error {
 	// get entity name
-	var entityName = reflect.TypeOf(entity).Elem().Name()
+	var entityName = entity.SetName()
 	// prepare statement
 	rows, _ := p.database.Query("SELECT id, json FROM "+entityName+" WHERE id = ?", &id)
 	var data string
 	for rows.Next() {
 		rows.Scan(&id, &data)
 		var bin = []byte(data)
-		json.Unmarshal(bin, &entity)
+		json.Unmarshal(bin, entity)
 	}
 	return nil
 }
@@ -151,7 +153,7 @@ func (p *Store) Get(id string, entity interface{}) error {
 // GetAll this persistent bean
 func (p *Store) GetAll(entity models.IPersistent, array models.IPersistents) error {
 	// get entity name
-	var entityName = reflect.TypeOf(entity).Elem().Name()
+	var entityName = entity.SetName()
 	// prepare statement
 	rows, _ := p.database.Query("SELECT id, json FROM " + entityName)
 	var id string
