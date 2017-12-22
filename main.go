@@ -30,24 +30,25 @@ import (
 	// Gorilla router
 
 	// Apis
-	"github.com/yroffin/goslides/apis"
-	"github.com/yroffin/goslides/bean"
-	"github.com/yroffin/goslides/business"
-	"github.com/yroffin/goslides/manager"
-	"github.com/yroffin/goslides/stores"
+	core_apis "github.com/yroffin/go-boot-sqllite/core/apis"
+	core_bean "github.com/yroffin/go-boot-sqllite/core/bean"
+	core_business "github.com/yroffin/go-boot-sqllite/core/business"
+	core_manager "github.com/yroffin/go-boot-sqllite/core/manager"
+	core_stores "github.com/yroffin/go-boot-sqllite/core/stores"
+	slide_apis "github.com/yroffin/goslides/apis"
 )
 
 // Rest()
 func main() {
 	// declare manager and boot it
-	var m = manager.Manager{}
+	var m = core_manager.Manager{}
 	m.Init()
 	// Core beans
-	m.Register("router", &apis.Router{Bean: &bean.Bean{}})
-	m.Register("crud-business", &business.CrudBusiness{Bean: &bean.Bean{}})
-	m.Register("store-manager", &stores.Store{Bean: &bean.Bean{}})
+	m.Register("router", &core_apis.Router{Bean: &core_bean.Bean{}})
+	m.Register("crud-business", &core_business.CrudBusiness{Bean: &core_bean.Bean{}})
+	m.Register("store-manager", &core_stores.Store{Bean: &core_bean.Bean{}})
 	// API beans
-	m.Register("slide", &apis.Slide{API: &apis.API{Bean: &bean.Bean{}}})
+	m.Register("slide", &slide_apis.Slide{API: &core_apis.API{Bean: &core_bean.Bean{}}})
 	m.Boot()
 
 	// After defining our server, we finally "listen and serve" on port 8080

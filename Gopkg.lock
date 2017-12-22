@@ -21,6 +21,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/yroffin/go-boot-sqllite"
+  packages = ["core/apis"]
+  revision = "d17495ae0c667aa0f587deef4e23d177136482dd"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
   revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
@@ -28,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9a175a675b18d5f6624daba17cfba14fec33d3c3e1725922b434e68e00f84836"
+  inputs-digest = "670f5f50a8fc85cb1a9b29286ffce36fde518f6d41b320afda990be1c1ec4192"
   solver-name = "gps-cdcl"
   solver-version = 1

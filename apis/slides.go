@@ -23,14 +23,16 @@
 package apis
 
 import (
-	"github.com/yroffin/goslides/bean"
-	"github.com/yroffin/goslides/models"
+	core_apis "github.com/yroffin/go-boot-sqllite/core/apis"
+	core_bean "github.com/yroffin/go-boot-sqllite/core/bean"
+	core_models "github.com/yroffin/go-boot-sqllite/core/models"
+	slide_models "github.com/yroffin/goslides/models"
 )
 
 // Slide internal members
 type Slide struct {
 	// Base component
-	*API
+	*core_apis.API
 	// internal members
 	Name string
 	// mounts
@@ -39,29 +41,29 @@ type Slide struct {
 
 // ISlide implements IBean
 type ISlide interface {
-	bean.IBean
+	core_bean.IBean
 }
 
 // PostConstruct this API
 func (p *Slide) Init() error {
 	// Crud
 	p.HandlerGetAll = func() (string, error) {
-		return p.genericGetAll(&models.SlideBean{}, models.IPersistents(&models.SlideBeans{Collection: make([]models.IPersistent, 0)}))
+		return p.GenericGetAll(&slide_models.SlideBean{}, core_models.IPersistents(&slide_models.SlideBeans{Collection: make([]core_models.IPersistent, 0)}))
 	}
 	p.HandlerGetByID = func(id string) (string, error) {
-		return p.genericGetByID(id, &models.SlideBean{})
+		return p.GenericGetByID(id, &slide_models.SlideBean{})
 	}
 	p.HandlerPost = func(body string) (string, error) {
-		return p.genericPost(body, &models.SlideBean{})
+		return p.GenericPost(body, &slide_models.SlideBean{})
 	}
 	p.HandlerPutByID = func(id string, body string) (string, error) {
-		return p.genericPutByID(id, body, &models.SlideBean{})
+		return p.GenericPutByID(id, body, &slide_models.SlideBean{})
 	}
 	p.HandlerDeleteByID = func(id string) (string, error) {
-		return p.genericDeleteByID(id, &models.SlideBean{})
+		return p.GenericDeleteByID(id, &slide_models.SlideBean{})
 	}
 	p.HandlerPatchByID = func(id string, body string) (string, error) {
-		return p.genericPatchByID(id, body, &models.SlideBean{})
+		return p.GenericPatchByID(id, body, &slide_models.SlideBean{})
 	}
 	return p.API.Init()
 }

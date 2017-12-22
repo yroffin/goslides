@@ -22,6 +22,10 @@
 // SOFTWARE.
 package models
 
+import (
+	core_models "github.com/yroffin/go-boot-sqllite/core/models"
+)
+
 // SlideBean simple slide model
 type SlideBean struct {
 	// Id
@@ -46,7 +50,7 @@ func (p *SlideBean) SetID(ID string) {
 }
 
 // Copy retrieve ID
-func (p *SlideBean) Copy() IPersistent {
+func (p *SlideBean) Copy() core_models.IPersistent {
 	clone := *p
 	return &clone
 }
@@ -54,15 +58,15 @@ func (p *SlideBean) Copy() IPersistent {
 // SlideBeans simple slide model
 type SlideBeans struct {
 	// Collection
-	Collection []IPersistent
+	Collection []core_models.IPersistent
 }
 
 // Add new bean
-func (p *SlideBeans) Add(slide IPersistent) {
+func (p *SlideBeans) Add(slide core_models.IPersistent) {
 	p.Collection = append(p.Collection, slide)
 }
 
 // Get collection of bean
-func (p *SlideBeans) Get() []IPersistent {
+func (p *SlideBeans) Get() []core_models.IPersistent {
 	return p.Collection
 }
