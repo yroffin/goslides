@@ -30,6 +30,8 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/yroffin/goslides/models"
+
 	// for import driver
 	_ "github.com/mattn/go-sqlite3"
 
@@ -142,6 +144,24 @@ func (p *Store) Get(id string, entity interface{}) error {
 		rows.Scan(&id, &data)
 		var bin = []byte(data)
 		json.Unmarshal(bin, &entity)
+	}
+	return nil
+}
+
+// GetAll this persistent bean
+func (p *Store) GetAll(entity models.IPersistent, array models.IPersistents) error {
+	// get entity name
+	var entityName = reflect.TypeOf(entity).Elem().Name()
+	// prepare statement
+	rows, _ := p.database.Query("SELECT id, json FROM " + entityName)
+	var id string
+	var data string
+	for rows.Next() {
+		rows.Scan(&id, &data)
+		var bin = []byte(data)
+		copy := entity.Copy()
+		json.Unmarshal(bin, &copy)
+		array.Add(copy)
 	}
 	return nil
 }

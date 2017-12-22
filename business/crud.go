@@ -74,6 +74,12 @@ func (p *CrudBusiness) Validate(name string) error {
 }
 
 // Get retrieve this bean by its id
+func (p *CrudBusiness) GetAll(toGet models.IPersistent, toGets models.IPersistents) error {
+	p.Store.GetAll(toGet, toGets)
+	return nil
+}
+
+// Get retrieve this bean by its id
 func (p *CrudBusiness) Get(toGet models.IPersistent) error {
 	p.Store.Get(toGet.GetID(), &toGet)
 	return nil

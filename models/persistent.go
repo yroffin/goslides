@@ -26,4 +26,11 @@ package models
 type IPersistent interface {
 	GetID() string
 	SetID(string)
+	Copy() IPersistent
+}
+
+// IPersistents interface
+type IPersistents interface {
+	Add(IPersistent)
+	Get() []IPersistent
 }

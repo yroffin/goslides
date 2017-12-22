@@ -1,4 +1,4 @@
-// Package interfaces for common interfaces
+// Package apis for all exposed api
 // MIT License
 //
 // Copyright (c) 2017 yroffin
@@ -44,29 +44,29 @@ type IRouter interface {
 }
 
 // Init Init this API
-func (api *Router) Init() error {
+func (p *Router) Init() error {
 	return nil
 }
 
 // PostConstruct Init this API
-func (api *Router) PostConstruct(name string) error {
+func (p *Router) PostConstruct(name string) error {
 	log.Printf("Router::PostConstruct - router creation")
 	// define all routes
-	api.Router = mux.NewRouter()
+	p.Router = mux.NewRouter()
 	return nil
 }
 
 // Validate Init this API
-func (api *Router) Validate(name string) error {
+func (p *Router) Validate(name string) error {
 	log.Printf("Router::Validate - router validation")
 	// handle now all requests
-	http.Handle("/", api.Router)
+	http.Handle("/", p.Router)
 	return nil
 }
 
 // HandleFunc declare a handler
-func (api *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request), method string, content string) {
+func (p *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Request), method string, content string) {
 	log.Printf("Router::HandleFunc %s with method %s", path, method)
 	// declare it to the router
-	api.Router.HandleFunc(path, f).Methods(method).Headers("Content-Type", content)
+	p.Router.HandleFunc(path, f).Methods(method).Headers("Content-Type", content)
 }

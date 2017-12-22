@@ -45,6 +45,9 @@ type ISlide interface {
 // PostConstruct this API
 func (p *Slide) Init() error {
 	// Crud
+	p.HandlerGetAll = func() (string, error) {
+		return p.genericGetAll(&models.SlideBean{}, models.IPersistents(&models.SlideBeans{Collection: make([]models.IPersistent, 0)}))
+	}
 	p.HandlerGetByID = func(id string) (string, error) {
 		return p.genericGetByID(id, &models.SlideBean{})
 	}

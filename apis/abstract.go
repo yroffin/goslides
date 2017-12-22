@@ -54,6 +54,7 @@ type API struct {
 	CrudBusiness    *business.CrudBusiness
 	// Crud
 	HandlerGetByID    func(id string) (string, error)
+	HandlerGetAll     func() (string, error)
 	HandlerPost       func(body string) (string, error)
 	HandlerPutByID    func(id string, body string) (string, error)
 	HandlerDeleteByID func(id string) (string, error)
@@ -87,6 +88,7 @@ func (p *API) ScanHandler(ptr interface{}) {
 		}
 		if strings.Contains(field.Name, "crud") {
 			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticGetByID", "GET")
+			p.append(ptr, field.Tag.Get("path"), "HandlerStaticGetAll", "GET")
 			p.append(ptr, field.Tag.Get("path"), "HandlerStaticPost", "POST")
 			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticPutByID", "PUT")
 			p.append(ptr, field.Tag.Get("path")+"/{id:[0-9a-zA-Z-_]*}", "HandlerStaticDeleteByID", "DELETE")
@@ -158,6 +160,22 @@ func (p *API) Declare(data APIMethod, intf interface{}) error {
 		result = errors.New("Unable to find any type for " + data.handler)
 	}
 	return result
+}
+
+// HandlerStaticGetAll is the GET by ID handler
+func (p *API) HandlerStaticGetAll() func(w http.ResponseWriter, r *http.Request) {
+	anonymous := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		data, err := p.HandlerGetAll()
+		if err != nil {
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "{\"message\":\"\"}")
+			return
+		}
+		w.WriteHeader(200)
+		fmt.Fprintf(w, data)
+	}
+	return anonymous
 }
 
 // HandlerStaticGetByID is the GET by ID handler
@@ -241,6 +259,14 @@ func (p *API) HandlerStaticPatchByID() func(w http.ResponseWriter, r *http.Reque
 		fmt.Fprintf(w, data)
 	}
 	return anonymous
+}
+
+// genericGetAll default method
+func (p *API) genericGetAll(toGet models.IPersistent, toGets models.IPersistents) (string, error) {
+	p.CrudBusiness.GetAll(toGet, toGets)
+	var arr = toGets.Get()
+	data, _ := json.Marshal(&arr)
+	return string(data), nil
 }
 
 // genericGetByID default method

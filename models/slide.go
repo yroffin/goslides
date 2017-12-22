@@ -39,3 +39,25 @@ func (p *SlideBean) GetID() string {
 func (p *SlideBean) SetID(ID string) {
 	p.ID = ID
 }
+
+// Copy retrieve ID
+func (p *SlideBean) Copy() IPersistent {
+	clone := *p
+	return &clone
+}
+
+// SlideBeans simple slide model
+type SlideBeans struct {
+	// Collection
+	Collection []IPersistent
+}
+
+// Add new bean
+func (p *SlideBeans) Add(slide IPersistent) {
+	p.Collection = append(p.Collection, slide)
+}
+
+// Get collection of bean
+func (p *SlideBeans) Get() []IPersistent {
+	return p.Collection
+}
