@@ -46,7 +46,7 @@ func main() {
 	// Core beans
 	m.Register("router", &core_apis.Router{Bean: &core_bean.Bean{}})
 	m.Register("crud-business", &core_business.CrudBusiness{Bean: &core_bean.Bean{}})
-	m.Register("store-manager", &core_stores.Store{Bean: &core_bean.Bean{}})
+	m.Register("store-manager", &core_stores.Store{Bean: &core_bean.Bean{}, Tables: []string{"Slide"}, DbPath: "./database.db"})
 	// API beans
 	m.Register("slide", &slide_apis.Slide{API: &core_apis.API{Bean: &core_bean.Bean{}}})
 	m.Boot()

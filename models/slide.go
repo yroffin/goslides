@@ -29,9 +29,11 @@ import (
 // SlideBean simple slide model
 type SlideBean struct {
 	// Id
-	ID string
+	ID string `json:"id"`
 	// Name
-	Name string
+	Name string `json:"name"`
+	// Name
+	Body string `json:"body"`
 }
 
 // SetName get set name
