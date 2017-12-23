@@ -23,9 +23,6 @@
 package apis
 
 import (
-	"fmt"
-	"net/http"
-
 	core_apis "github.com/yroffin/go-boot-sqllite/core/apis"
 	core_bean "github.com/yroffin/go-boot-sqllite/core/bean"
 	core_models "github.com/yroffin/go-boot-sqllite/core/models"
@@ -40,7 +37,7 @@ type Slide struct {
 	Name string
 	// mounts
 	crud         string `path:"/api/slides"`
-	presentation string `path:"/api/presentation" handler:"HandlerStaticPresentation" method:"GET" mime-type:""`
+	presentation string `path:"/api/presentation" handler:"RenderPresentation" method:"GET" mime-type:""`
 }
 
 // ISlide implements IBean
@@ -84,23 +81,10 @@ func (p *Slide) Validate(name string) error {
 	return nil
 }
 
-// HandlerStaticPresentation render presentation
-func (p *Slide) HandlerStaticPresentation() func(w http.ResponseWriter, r *http.Request) {
-	anonymous := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "text/html")
-		data, err := p.RenderPresentation()
-		if err != nil {
-			w.WriteHeader(400)
-			fmt.Fprintf(w, "{\"message\":\"\"}")
-			return
-		}
-		w.WriteHeader(200)
-		fmt.Fprintf(w, data)
+// RenderPresentation render presentation
+func (p *Slide) RenderPresentation() func() (string, error) {
+	anonymous := func() (string, error) {
+		return "test de plus" + string(p.GetName()), nil
 	}
 	return anonymous
-}
-
-// RenderPresentation render presentation
-func (p *Slide) RenderPresentation() (string, error) {
-	return "test", nil
 }
