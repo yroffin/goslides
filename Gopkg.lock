@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/GeertJohan/go.rice"
+  packages = [".","embedded"]
+  revision = "c02ca9a983da5807ddf7d796784928f5be4afd09"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/daaku/go.zipexe"
+  packages = ["."]
+  revision = "a5fe2436ffcb3236e175e5149162b41cd28bd27d"
+
+[[projects]]
   name = "github.com/gorilla/context"
   packages = ["."]
   revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
@@ -14,6 +26,12 @@
   version = "v1.6.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/kardianos/osext"
+  packages = ["."]
+  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
+
+[[projects]]
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
   revision = "ed69081a91fd053f17672236b0dd52ba7485e1a3"
@@ -22,8 +40,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/yroffin/go-boot-sqllite"
-  packages = ["core/apis"]
-  revision = "d17495ae0c667aa0f587deef4e23d177136482dd"
+  packages = ["core/apis","core/bean","core/business","core/manager","core/models","core/stores"]
+  revision = "a30b49b4adb396c50403a50aee837096c4732648"
 
 [[projects]]
   branch = "master"
@@ -34,6 +52,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "670f5f50a8fc85cb1a9b29286ffce36fde518f6d41b320afda990be1c1ec4192"
+  inputs-digest = "4b348cb61da325764359ee07696164c870d0c2d931112a82c44f2d484e04d3cd"
   solver-name = "gps-cdcl"
   solver-version = 1

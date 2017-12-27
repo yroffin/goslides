@@ -23,6 +23,16 @@
 package apis
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"regexp"
+	"text/template"
+
+	rice "github.com/GeertJohan/go.rice"
+
 	core_apis "github.com/yroffin/go-boot-sqllite/core/apis"
 	core_bean "github.com/yroffin/go-boot-sqllite/core/bean"
 	core_models "github.com/yroffin/go-boot-sqllite/core/models"
@@ -35,6 +45,8 @@ type Slide struct {
 	*core_apis.API
 	// internal members
 	Name string
+	// Resource
+	templateBox *rice.Box
 	// mounts
 	crud         string `path:"/api/slides"`
 	presentation string `path:"/api/presentation" handler:"RenderPresentation" method:"GET" mime-type:""`
@@ -66,6 +78,12 @@ func (p *Slide) Init() error {
 	p.HandlerPatchByID = func(id string, body string) (string, error) {
 		return p.GenericPatchByID(id, body, &slide_models.SlideBean{})
 	}
+	// find a rice.Box
+	resources, err := rice.FindBox("../resources")
+	if err != nil {
+		log.Fatal(err)
+	}
+	p.templateBox = resources
 	return p.API.Init()
 }
 
@@ -81,10 +99,66 @@ func (p *Slide) Validate(name string) error {
 	return nil
 }
 
+// RenderContext for rendering the html
+type RenderContext struct {
+	Namee string
+	Slide *Slide
+}
+
+// Wget load in local the resource
+func (p *RenderContext) Wget(typ string, resource string) string {
+	resp, _ := http.Get(resource)
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var raw = string(body)
+	log.Printf("Successfully loaded %d bytes from %v", len(raw), resource)
+
+	// analyze CSS to transform all url call
+	if typ == "css" {
+		re := regexp.MustCompile(`[u][r][l][(].*[)]`)
+		matches := re.FindStringSubmatch(raw)
+		for i := 0; i < len(matches); i++ {
+			log.Printf("MATCHES %d '%v'", i, matches[i])
+		}
+	}
+	return raw
+}
+
+// Slides render all slides
+func (p *RenderContext) Slides() string {
+	// retrieve all slides
+	var model = slide_models.SlideBean{}
+	var models = slide_models.SlideBeans{Collection: make([]core_models.IPersistent, 0)}
+	p.Slide.CrudBusiness.GetAll(&model, core_models.IPersistents(&models))
+	log.Printf("All %v", models.Collection)
+	var stringBuffer string
+	for index := 0; index < len(models.Collection); index++ {
+		value, _ := models.Collection[index].(*slide_models.SlideBean)
+		stringBuffer += fmt.Sprintf("<section>\n%s\n</section>\n", value.Body)
+		log.Printf("Slide\n%v", stringBuffer)
+	}
+	return stringBuffer
+}
+
 // RenderPresentation render presentation
 func (p *Slide) RenderPresentation() func() (string, error) {
 	anonymous := func() (string, error) {
-		return "test de plus" + string(p.GetName()), nil
+		// get file contents as string
+		templateString, err := p.templateBox.String("reveal/reveal.html")
+		if err != nil {
+			log.Fatal(err)
+		}
+		// parse and execute the template
+		tmplMessage, err := template.New("default").Parse(templateString)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// ender the template
+		var tpl bytes.Buffer
+		context := new(RenderContext)
+		context.Slide = p
+		tmplMessage.Execute(&tpl, context)
+		return tpl.String(), nil
 	}
 	return anonymous
 }
