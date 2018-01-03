@@ -26,7 +26,6 @@ import (
 
 	// the "net/http" library has methods for HTTP
 
-	"net/http"
 	// Gorilla router
 
 	// Apis
@@ -50,7 +49,7 @@ func main() {
 	// API beans
 	m.Register("slide", &slide_apis.Slide{API: &core_apis.API{Bean: &core_bean.Bean{}}})
 	m.Boot()
-
-	// After defining our server, we finally "listen and serve" on port 8080
-	http.ListenAndServe(":8080", nil)
+	// Declarre listener
+	m.HTTP(8080)
+	m.Wait()
 }

@@ -28,7 +28,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"regexp"
 	"text/template"
 
 	rice "github.com/GeertJohan/go.rice"
@@ -115,11 +114,13 @@ func (p *RenderContext) Wget(typ string, resource string) string {
 
 	// analyze CSS to transform all url call
 	if typ == "css" {
-		re := regexp.MustCompile(`[u][r][l][(].*[)]`)
-		matches := re.FindStringSubmatch(raw)
-		for i := 0; i < len(matches); i++ {
-			log.Printf("MATCHES %d '%v'", i, matches[i])
-		}
+		/*
+			re := regexp.MustCompile(`[u][r][l][(].*[)]`)
+			matches := re.FindStringSubmatch(raw)
+			for i := 0; i < len(matches); i++ {
+				log.Printf("MATCHES %d '%v'", i, matches[i])
+			}
+		*/
 	}
 	return raw
 }
@@ -130,12 +131,10 @@ func (p *RenderContext) Slides() string {
 	var model = slide_models.SlideBean{}
 	var models = slide_models.SlideBeans{Collection: make([]core_models.IPersistent, 0)}
 	p.Slide.CrudBusiness.GetAll(&model, core_models.IPersistents(&models))
-	log.Printf("All %v", models.Collection)
 	var stringBuffer string
 	for index := 0; index < len(models.Collection); index++ {
 		value, _ := models.Collection[index].(*slide_models.SlideBean)
 		stringBuffer += fmt.Sprintf("<section>\n%s\n</section>\n", value.Body)
-		log.Printf("Slide\n%v", stringBuffer)
 	}
 	return stringBuffer
 }
