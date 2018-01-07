@@ -30,9 +30,15 @@ import (
 type SlideBean struct {
 	// Id
 	ID string `json:"id"`
+	// Timestamp
+	Timestamp core_models.JSONTime `json:"timestamp"`
 	// Name
 	Name string `json:"name"`
-	// Name
+	// Title
+	Title string `json:"title"`
+	// SubTitle
+	SubTitle string `json:"subtitle"`
+	// Body
 	Body string `json:"body"`
 }
 
@@ -49,6 +55,16 @@ func (p *SlideBean) GetID() string {
 // SetID retrieve ID
 func (p *SlideBean) SetID(ID string) {
 	p.ID = ID
+}
+
+// SetTimestamp set timestamp
+func (p *SlideBean) SetTimestamp(stamp core_models.JSONTime) {
+	p.Timestamp = stamp
+}
+
+// GetTimestamp get timestamp
+func (p *SlideBean) GetTimestamp() core_models.JSONTime {
+	return p.Timestamp
 }
 
 // Copy retrieve ID
