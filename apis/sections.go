@@ -23,7 +23,12 @@
 package apis
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"text/template"
 
 	rice "github.com/GeertJohan/go.rice"
 
@@ -33,8 +38,8 @@ import (
 	slide_models "github.com/yroffin/goslides/models"
 )
 
-// Slide internal members
-type Slide struct {
+// Section internal members
+type Section struct {
 	// Base component
 	*core_apis.API
 	// internal members
@@ -42,16 +47,17 @@ type Slide struct {
 	// Resource
 	templateBox *rice.Box
 	// mounts
-	crud string `path:"/api/slides"`
+	crud         string `path:"/api/sections"`
+	presentation string `path:"/api/presentation/{id:[0-9a-zA-Z-_]*}" handler:"Render" method:"GET" mime-type:""`
 }
 
-// ISlide implements IBean
-type ISlide interface {
+// ISection implements IBean
+type ISection interface {
 	core_bean.IBean
 }
 
 // PostConstruct this API
-func (p *Slide) Init() error {
+func (p *Section) Init() error {
 	// Crud
 	p.HandlerGetAll = func() (string, error) {
 		return p.GenericGetAll(&slide_models.SlideBean{}, core_models.IPersistents(&slide_models.SlideBeans{Collection: make([]core_models.IPersistent, 0)}))
@@ -81,13 +87,77 @@ func (p *Slide) Init() error {
 }
 
 // PostConstruct this API
-func (p *Slide) PostConstruct(name string) error {
+func (p *Section) PostConstruct(name string) error {
 	// Scan struct and init all handler
 	p.ScanHandler(p)
 	return nil
 }
 
 // Validate this API
-func (p *Slide) Validate(name string) error {
+func (p *Section) Validate(name string) error {
 	return nil
+}
+
+// RenderSectionContext for rendering the html
+type RenderSectionContext struct {
+	Namee   string
+	Section *Section
+}
+
+// Wget load in local the resource
+func (p *RenderSectionContext) Wget(typ string, resource string) string {
+	resp, _ := http.Get(resource)
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var raw = string(body)
+	log.Printf("Successfully loaded %d bytes from %v", len(raw), resource)
+
+	// analyze CSS to transform all url call
+	if typ == "css" {
+		/*
+			re := regexp.MustCompile(`[u][r][l][(].*[)]`)
+			matches := re.FindStringSubmatch(raw)
+			for i := 0; i < len(matches); i++ {
+				log.Printf("MATCHES %d '%v'", i, matches[i])
+			}
+		*/
+	}
+	return raw
+}
+
+// Sections render all slides
+func (p *RenderSectionContext) Sections() string {
+	// retrieve all slides
+	var model = slide_models.SlideBean{}
+	var models = slide_models.SlideBeans{Collection: make([]core_models.IPersistent, 0)}
+	p.Section.CrudBusiness.GetAll(&model, core_models.IPersistents(&models))
+	var stringBuffer string
+	for index := 0; index < len(models.Collection); index++ {
+		value, _ := models.Collection[index].(*slide_models.SlideBean)
+		stringBuffer += fmt.Sprintf("<section>\n%s\n</section>\n", value.Body)
+	}
+	return stringBuffer
+}
+
+// Render render presentation
+func (p *Section) Render() func() (string, error) {
+	anonymous := func() (string, error) {
+		// get file contents as string
+		templateString, err := p.templateBox.String("reveal/reveal.html")
+		if err != nil {
+			log.Fatal(err)
+		}
+		// parse and execute the template
+		tmplMessage, err := template.New("default").Parse(templateString)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// render the template
+		var tpl bytes.Buffer
+		context := new(RenderSectionContext)
+		context.Section = p
+		tmplMessage.Execute(&tpl, context)
+		return tpl.String(), nil
+	}
+	return anonymous
 }

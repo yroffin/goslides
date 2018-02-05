@@ -26,67 +26,69 @@ import (
 	core_models "github.com/yroffin/go-boot-sqllite/core/models"
 )
 
-// SlideBean simple slide model
-type SlideBean struct {
+// FolderElementBean simple folder model
+type FolderElementBean struct {
+	// Reference
+	Reference string `json:"reference"`
+	// Children
+	Children []FolderElementBean `json:"children"`
+}
+
+// FolderBean simple folder model
+type FolderBean struct {
 	// Id
 	ID string `json:"id"`
 	// Timestamp
 	Timestamp core_models.JSONTime `json:"timestamp"`
 	// Name
 	Name string `json:"name"`
-	// Title
-	Title string `json:"title"`
-	// SubTitle
-	SubTitle string `json:"subtitle"`
-	// Order
-	Order string `json:"order"`
-	// Body
-	Body string `json:"body"`
+	// Children
+	Children []FolderElementBean `json:"children"`
 }
 
 // SetName get set name
-func (p *SlideBean) SetName() string {
-	return "Slide"
+func (p *FolderBean) SetName() string {
+	return "Folder"
 }
 
 // GetID retrieve ID
-func (p *SlideBean) GetID() string {
+func (p *FolderBean) GetID() string {
 	return p.ID
 }
 
 // SetID retrieve ID
-func (p *SlideBean) SetID(ID string) {
+func (p *FolderBean) SetID(ID string) {
 	p.ID = ID
 }
 
 // SetTimestamp set timestamp
-func (p *SlideBean) SetTimestamp(stamp core_models.JSONTime) {
+func (p *FolderBean) SetTimestamp(stamp core_models.JSONTime) {
 	p.Timestamp = stamp
 }
 
 // GetTimestamp get timestamp
-func (p *SlideBean) GetTimestamp() core_models.JSONTime {
+func (p *FolderBean) GetTimestamp() core_models.JSONTime {
 	return p.Timestamp
 }
 
 // Copy retrieve ID
-func (p *SlideBean) Copy() core_models.IPersistent {
+func (p *FolderBean) Copy() core_models.IPersistent {
 	clone := *p
 	return &clone
 }
 
-// SlideBeans simple slide model
-type SlideBeans struct {
+// FolderBeans simple folder model
+type FolderBeans struct {
 	// Collection
 	Collection []core_models.IPersistent
 }
 
 // Add new bean
-func (p *SlideBeans) Add(slide core_models.IPersistent) {
-	p.Collection = append(p.Collection, slide)
+func (p *FolderBeans) Add(folder core_models.IPersistent) {
+	p.Collection = append(p.Collection, folder)
 }
 
 // Get collection of bean
-func (p *SlideBeans) Get() []core_models.IPersistent {
+func (p *FolderBeans) Get() []core_models.IPersistent {
 	return p.Collection
 }
