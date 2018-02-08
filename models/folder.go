@@ -28,6 +28,8 @@ import (
 
 // FolderElementBean simple folder model
 type FolderElementBean struct {
+	// Uuid
+	ID string `json:"id"`
 	// Reference
 	Reference string `json:"reference"`
 	// Children
