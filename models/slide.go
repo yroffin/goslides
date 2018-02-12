@@ -90,3 +90,12 @@ func (p *SlideBeans) Add(slide core_models.IPersistent) {
 func (p *SlideBeans) Get() []core_models.IPersistent {
 	return p.Collection
 }
+
+// Index read a single element
+func (p *SlideBeans) Index(index int) *SlideBean {
+	data, ok := p.Collection[index].(*SlideBean)
+	if ok {
+		return data
+	}
+	return nil
+}

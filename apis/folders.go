@@ -24,6 +24,7 @@ package apis
 
 import (
 	"bytes"
+	json "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -36,7 +37,7 @@ import (
 	core_apis "github.com/yroffin/go-boot-sqllite/core/apis"
 	core_bean "github.com/yroffin/go-boot-sqllite/core/bean"
 	core_models "github.com/yroffin/go-boot-sqllite/core/models"
-	folder_models "github.com/yroffin/goslides/models"
+	app_models "github.com/yroffin/goslides/models"
 )
 
 // Folder internal members
@@ -72,22 +73,33 @@ func (p *Folder) Init() error {
 	}
 	// Crud
 	p.HandlerGetAll = func() (string, error) {
-		return p.GenericGetAll(&folder_models.FolderBean{}, core_models.IPersistents(&folder_models.FolderBeans{Collection: make([]core_models.IPersistent, 0)}))
+		return p.GenericGetAll(&app_models.FolderBean{}, core_models.IPersistents(&app_models.FolderBeans{Collection: make([]core_models.IPersistent, 0)}))
 	}
 	p.HandlerGetByID = func(id string) (string, error) {
-		return p.GenericGetByID(id, &folder_models.FolderBean{})
+		return p.GenericGetByID(id, &app_models.FolderBean{})
 	}
 	p.HandlerPost = func(body string) (string, error) {
-		return p.GenericPost(body, &folder_models.FolderBean{})
+		return p.GenericPost(body, &app_models.FolderBean{})
+	}
+	p.HandlerTasks = func(name string, body string) (string, error) {
+		if name == "export" {
+			// export handler
+			return p.Download()
+		}
+		if name == "import" {
+			// export handler
+			return p.Upload(body)
+		}
+		return "", nil
 	}
 	p.HandlerPutByID = func(id string, body string) (string, error) {
-		return p.GenericPutByID(id, body, &folder_models.FolderBean{})
+		return p.GenericPutByID(id, body, &app_models.FolderBean{})
 	}
 	p.HandlerDeleteByID = func(id string) (string, error) {
-		return p.GenericDeleteByID(id, &folder_models.FolderBean{})
+		return p.GenericDeleteByID(id, &app_models.FolderBean{})
 	}
 	p.HandlerPatchByID = func(id string, body string) (string, error) {
-		return p.GenericPatchByID(id, body, &folder_models.FolderBean{})
+		return p.GenericPatchByID(id, body, &app_models.FolderBean{})
 	}
 	// find a rice.Box
 	resources, err := rice.FindBox("../resources")
@@ -142,13 +154,13 @@ func (p *RenderContext) Wget(typ string, resource string) string {
 func (p *RenderContext) Folders(id string) string {
 	log.Printf("Iterate on folder %v", id)
 	// retrieve all slides
-	var folder = folder_models.FolderBean{}
+	var folder = app_models.FolderBean{}
 	folder.SetID(id)
 	p.Folder.CrudBusiness.Get(&folder)
 	var stringBuffer string
 	for index := 0; index < len(folder.Children); index++ {
 		log.Printf("Iterate on folder %v", folder.Children[index])
-		var slide = folder_models.SlideBean{}
+		var slide = app_models.SlideBean{}
 		slide.SetID(folder.Children[index].Reference)
 		p.Folder.Slide.CrudBusiness.Get(&slide)
 		stringBuffer += fmt.Sprintf("<section>\n%s\n</section>\n", slide.Body)
@@ -179,4 +191,51 @@ func (p *Folder) RenderPresentation() func(string) (string, error) {
 		return tpl.String(), nil
 	}
 	return anonymous
+}
+
+// Download all section and data
+func (p *Folder) Download() (string, error) {
+	var export = app_models.FoldersExportBean{}
+	// find all folders
+	var folder = app_models.FolderBean{}
+	var folders = app_models.FolderBeans{}
+	p.CrudBusiness.GetAll(&folder, &folders)
+	log.Printf("Export %d folder(s)", len(folders.Collection))
+	export.Folders = make([]app_models.FolderBean, len(folders.Collection))
+	for index := 0; index < len(folders.Collection); index++ {
+		export.Folders[index] = *folders.Index(index)
+	}
+	// find all slides
+	var slide = app_models.SlideBean{}
+	var slides = app_models.SlideBeans{}
+	p.Slide.CrudBusiness.GetAll(&slide, &slides)
+	log.Printf("Export %d slide(s)", len(slides.Collection))
+	export.Slides = make([]app_models.SlideBean, len(slides.Collection))
+	for index := 0; index < len(slides.Collection); index++ {
+		export.Slides[index] = *slides.Index(index)
+	}
+	data, _ := json.MarshalIndent(export, "\t", "\t")
+	return string(data), nil
+}
+
+// Upload all section and data
+func (p *Folder) Upload(body string) (string, error) {
+	var upload = app_models.FoldersExportBean{}
+	json.Unmarshal([]byte(body), &upload)
+	// iterate on folders
+	log.Printf("Import %d folder(s)", len(upload.Folders))
+	p.CrudBusiness.Truncate(&app_models.FolderBean{})
+	for index := 0; index < len(upload.Folders); index++ {
+		log.Printf("Import folder %v", upload.Folders[index].GetID())
+		p.CrudBusiness.Create(&upload.Folders[index])
+	}
+	// iterate on slides
+	log.Printf("Import %d slide(s)", len(upload.Slides))
+	p.Slide.CrudBusiness.Truncate(&app_models.SlideBean{})
+	for index := 0; index < len(upload.Slides); index++ {
+		log.Printf("Import slide %v", upload.Slides[index].GetID())
+		p.Slide.CrudBusiness.Create(&upload.Slides[index])
+	}
+	data, _ := json.MarshalIndent(upload, "\t", "\t")
+	return string(data), nil
 }

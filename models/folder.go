@@ -48,6 +48,14 @@ type FolderBean struct {
 	Children []FolderElementBean `json:"children"`
 }
 
+// FoldersExportBean simple folder export model
+type FoldersExportBean struct {
+	// Folders
+	Folders []FolderBean `json:"folders"`
+	// Slides
+	Slides []SlideBean `json:"slides"`
+}
+
 // SetName get set name
 func (p *FolderBean) SetName() string {
 	return "Folder"
@@ -93,4 +101,13 @@ func (p *FolderBeans) Add(folder core_models.IPersistent) {
 // Get collection of bean
 func (p *FolderBeans) Get() []core_models.IPersistent {
 	return p.Collection
+}
+
+// Index read a single element
+func (p *FolderBeans) Index(index int) *FolderBean {
+	data, ok := p.Collection[index].(*FolderBean)
+	if ok {
+		return data
+	}
+	return nil
 }
