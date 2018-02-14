@@ -159,7 +159,7 @@ func (p *RenderContext) Folders(id string) string {
 	p.Folder.CrudBusiness.Get(&folder)
 	var stringBuffer string
 	for index := 0; index < len(folder.Children); index++ {
-		log.Printf("Iterate on folder %v", folder.Children[index])
+		log.Printf("Iterate on child folder %v for reference %v", folder.Children[index].ID, folder.Children[index].Reference)
 		var slide = app_models.SlideBean{}
 		slide.SetID(folder.Children[index].Reference)
 		p.Folder.Slide.CrudBusiness.Get(&slide)
