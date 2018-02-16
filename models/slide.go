@@ -40,6 +40,8 @@ type SlideBean struct {
 	SubTitle string `json:"subtitle"`
 	// Order
 	Order string `json:"order"`
+	// Type
+	Type string `json:"type"`
 	// Body
 	Body string `json:"body"`
 }

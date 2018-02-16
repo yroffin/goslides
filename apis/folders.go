@@ -150,6 +150,22 @@ func (p *RenderContext) Wget(typ string, resource string) string {
 	return raw
 }
 
+// DumpFolderElement render all slides
+func (p *RenderContext) DumpFolderElement(elements []app_models.FolderElementBean) string {
+	var stringBuffer string
+	log.Printf("Dump %v folder(s)", len(elements))
+	for index := 0; index < len(elements); index++ {
+		log.Printf("Iterate on child folder %v for reference %v", elements[index].ID, elements[index].Reference)
+		var slide = app_models.SlideBean{}
+		slide.SetID(elements[index].Reference)
+		p.Folder.Slide.CrudBusiness.Get(&slide)
+		stringBuffer += fmt.Sprintf("<section>\n")
+		stringBuffer += p.DumpFolderElement(elements[index].Children)
+		stringBuffer += fmt.Sprintf("%s\n</section>\n", slide.Body)
+	}
+	return stringBuffer
+}
+
 // Folders render all slides
 func (p *RenderContext) Folders(id string) string {
 	log.Printf("Iterate on folder %v", id)
@@ -157,14 +173,9 @@ func (p *RenderContext) Folders(id string) string {
 	var folder = app_models.FolderBean{}
 	folder.SetID(id)
 	p.Folder.CrudBusiness.Get(&folder)
+	// dump elements
 	var stringBuffer string
-	for index := 0; index < len(folder.Children); index++ {
-		log.Printf("Iterate on child folder %v for reference %v", folder.Children[index].ID, folder.Children[index].Reference)
-		var slide = app_models.SlideBean{}
-		slide.SetID(folder.Children[index].Reference)
-		p.Folder.Slide.CrudBusiness.Get(&slide)
-		stringBuffer += fmt.Sprintf("<section>\n%s\n</section>\n", slide.Body)
-	}
+	stringBuffer = p.DumpFolderElement(folder.Children)
 	return stringBuffer
 }
 
