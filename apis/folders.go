@@ -159,9 +159,17 @@ func (p *RenderContext) DumpFolderElement(elements []app_models.FolderElementBea
 		var slide = app_models.SlideBean{}
 		slide.SetID(elements[index].Reference)
 		p.Folder.Slide.CrudBusiness.Get(&slide)
+		if len(elements[index].Children) > 0 {
+			stringBuffer += fmt.Sprintf("<section>\n")
+		}
 		stringBuffer += fmt.Sprintf("<section>\n")
-		stringBuffer += p.DumpFolderElement(elements[index].Children)
-		stringBuffer += fmt.Sprintf("%s\n</section>\n", slide.Body)
+		stringBuffer += fmt.Sprintf("<h3>%s</h3>\n", slide.Name)
+		stringBuffer += fmt.Sprintf("%s\n", slide.Body)
+		stringBuffer += fmt.Sprintf("</section>\n")
+		if len(elements[index].Children) > 0 {
+			stringBuffer += p.DumpFolderElement(elements[index].Children)
+			stringBuffer += fmt.Sprintf("</section>\n")
+		}
 	}
 	return stringBuffer
 }
